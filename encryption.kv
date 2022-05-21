@@ -3,8 +3,15 @@
 # utils.get_color_from_hex("#FFFFFF")
 
 <UnicodeEncryption>
-#    canvas:
+    BoxLayout:
+        width: root.width / 2
+        height: root.height / 2
+        TextInput:
+            id: input
     Label:
         center_x: root.width / 2
         center_y: root.height - 10
         text: "Unicode Encryption Application"
+    Button:
+        text: "aaa"
+        on_release: app.encrypt_text()
