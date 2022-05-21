@@ -1,3 +1,7 @@
+from kivy.app import App
+from kivy.uix.widget import Widget
+
+
 hex_str = "0123456789ABCDEF"
 
 
@@ -46,3 +50,16 @@ def dec_to_let_blocks(num, n):
         rs += chr(nm % hex_to_dec("10FFFD"))
         nm //= hex_to_dec("10FFFD")
     return rs[::-1]
+
+
+class UnicodeEncryption(Widget):
+    pass
+
+
+class EncryptionApp(App):
+    def build(self):
+        return UnicodeEncryption()
+
+
+if __name__ == '__main__':
+    EncryptionApp().run()
