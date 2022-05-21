@@ -1,5 +1,4 @@
 hex_str = "0123456789ABCDEF"
-alpha = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
 
 
 def hex_to_dec(inpt):
@@ -22,10 +21,6 @@ def dec_to_hex(inpt):
     return rs[::-1]
 
 
-def unicode(inpt):
-    return chr(hex_to_dec(inpt))
-
-
 def let_to_dec(inpt):
     rn = 0
     i = 0
@@ -35,25 +30,16 @@ def let_to_dec(inpt):
     return rn
 
 
-def dec_to_let(inpt):
+def dec_to_let(num):
     rs = ""
-    nm = inpt
+    nm = num
     while (nm / hex_to_dec("10FFFD")) > 0:
         rs += chr(nm % hex_to_dec("10FFFD"))
         nm //= hex_to_dec("10FFFD")
     return rs
 
 
-def convert_to_text(num, n):
-    rs = ""
-    nm = num
-    for i in range(n):
-        rs += alpha[nm % len(alpha)]
-        nm //= len(alpha)
-    return rs[::-1]
-
-
-def convert_to_text_uni(num, n):
+def dec_to_let_blocks(num, n):
     rs = ""
     nm = num
     for i in range(n):
