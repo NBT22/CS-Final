@@ -6,17 +6,17 @@ from kivy.uix.widget import Widget
 
 
 hex_str = "0123456789ABCDEF"
-block_size_var = 100
+block_size_var = 1
 encrypt_val_1 = 347
 encrypt_val_2 = 1721
 
 
 def mod_inverse_helper(a, b):
-    q, r = a//b, a%b
+    q, r = a//b, a % b
     if r == 1:
-        return (1, -1 * q)
+        return 1, -1 * q
     u, v = mod_inverse_helper(b, r)
-    return (v, -1 * q * v + u)
+    return v, -1 * q * v + u
 
 
 def mod_inverse(a, m):
@@ -36,17 +36,24 @@ def hex_to_dec(inpt):
 
 
 unicode_max = hex_to_dec("10FFFD")
+utf_gt8 = []
+print("Creating dynamic variables...")
+for i in range(unicode_max):
+    try:
+        chr(i).encode("utf").decode()
+    except UnicodeEncodeError:
+        utf_gt8.append(i)
+        print(f"{'%.2f' % ((len(utf_gt8) / 2048) * 100)}% complete")
+print("Done")
 
 
 def unicode_check(num):
     try:
-        chr(num).encode("utf-8").decode()
+        chr(num).encode("utf").decode()
     except UnicodeEncodeError:
-        pass
-    if num > unicode_max:
-        num = unicode_max
-    elif num < 32:
-        num = 32
+        return True
+    if 32 < num > unicode_max:
+        return False
 
 
 def let_to_dec(inpt):
@@ -71,7 +78,6 @@ def dec_to_let(num, block_size):
 
 
 def encrypt(text, n, a, b):
-    global extra_letters
     rs = ""
     if n > len(text):
         extra_letters = n - len(text)
@@ -80,16 +86,24 @@ def encrypt(text, n, a, b):
     for i in range(extra_letters):
         text += chr(random.randint(32, ((i * n) + 32) % unicode_max))
     i = 0
+    text = ("%03i" % extra_letters) + text
+    print(text)
     while i < len(text):
+        utf8 = False
         pair = text[i:n + i]
         pair_value = ((a * let_to_dec(pair)) + b) % (unicode_max**n)
-        rs += dec_to_let(pair_value, n)
+        while utf8 is False:
+            try:
+                rs += dec_to_let(pair_value, n).encode("utf-8").decode()
+                utf8 = True
+            except UnicodeEncodeError:
+                pair_value += 1
+        print(rs)
         i += n
     return rs
 
 
 def decrypt(text, n, a, b):
-    global extra_letters
     rs = ""
     i = 0
     while i < len(text):
@@ -97,7 +111,7 @@ def decrypt(text, n, a, b):
         pair_value = ((let_to_dec(pair) - b) * mod_inverse(a, unicode_max**n)) % (unicode_max**n)
         rs += dec_to_let(pair_value, n)
         i += n
-    return rs[0:len(rs) - extra_letters]
+    return rs  # [0:len(rs) - extra_letters]
 
 
 class UnicodeEncryption(Widget):
