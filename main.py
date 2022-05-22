@@ -1,5 +1,6 @@
 import math
 import random
+import sys
 
 from kivy.app import App
 from kivy.uix.widget import Widget
@@ -35,24 +36,27 @@ def hex_to_dec(inpt):
     return rn
 
 
-unicode_max = hex_to_dec("10FFFD")
 utf_gt8 = []
 print("Creating dynamic variables...")
-for i in range(unicode_max):
+percent = 0
+for num in range(1114111):
     try:
-        chr(i).encode("utf").decode()
+        chr(num).encode("utf").decode()
     except UnicodeEncodeError:
-        utf_gt8.append(i)
-        print(f"{'%.2f' % ((len(utf_gt8) / 2048) * 100)}% complete")
+        utf_gt8.append(chr(num))
+    finally:
+        if '%.2f' % ((num / 1114111) * 100) != percent:
+            percent = '%.2f' % ((num / 1114111) * 100)
+            print(f"\r{percent}% complete", end='', flush=True)
 print("Done")
-
+# print(utf_gt8)
 
 def unicode_check(num):
     try:
         chr(num).encode("utf").decode()
     except UnicodeEncodeError:
         return True
-    if 32 < num > unicode_max:
+    if 32 < num > 1114111:
         return False
 
 
@@ -60,20 +64,23 @@ def let_to_dec(inpt):
     rn = 0
     i = 0
     for letter in inpt:
-        rn += ord(letter) * (unicode_max**i)
+        rn += ord(letter) * (1114111**i)
         i += 1
     return rn
+
+
+print(let_to_dec(chr(1114111)*3))
 
 
 def dec_to_let(num, block_size):
     rs = ""
     nm = num
     for i in range(block_size):
-        if (nm % unicode_max) == 0:
-            nm //= unicode_max
+        if (nm % 1114111) == 0:
+            nm //= 1114111
             continue
-        rs += chr(nm % unicode_max)
-        nm //= unicode_max
+        rs += chr(nm % 1114111)
+        nm //= 1114111
     return rs
 
 
@@ -84,14 +91,14 @@ def encrypt(text, n, a, b):
     else:
         extra_letters = (n * math.ceil(len(text) / n)) - len(text)
     for i in range(extra_letters):
-        text += chr(random.randint(32, ((i * n) + 32) % unicode_max))
+        text += chr(random.randint(32, ((i * n) + 32) % 1114111))
     i = 0
     text = ("%03i" % extra_letters) + text
     print(text)
     while i < len(text):
         utf8 = False
         pair = text[i:n + i]
-        pair_value = ((a * let_to_dec(pair)) + b) % (unicode_max**n)
+        pair_value = ((a * let_to_dec(pair)) + b) % (1114111**n)
         while utf8 is False:
             try:
                 rs += dec_to_let(pair_value, n).encode("utf-8").decode()
@@ -108,7 +115,7 @@ def decrypt(text, n, a, b):
     i = 0
     while i < len(text):
         pair = text[i:n + i]
-        pair_value = ((let_to_dec(pair) - b) * mod_inverse(a, unicode_max**n)) % (unicode_max**n)
+        pair_value = ((let_to_dec(pair) - b) * mod_inverse(a, 1114111**n)) % (1114111**n)
         rs += dec_to_let(pair_value, n)
         i += n
     return rs  # [0:len(rs) - extra_letters]
