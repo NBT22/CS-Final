@@ -36,28 +36,40 @@ def hex_to_dec(inpt):
     return rn
 
 
-utf_gt8 = []
+# utf_gt8 = []
 print("Creating dynamic variables...")
-percent = 0
-for num in range(1114111):
-    try:
-        chr(num).encode("utf").decode()
-    except UnicodeEncodeError:
-        utf_gt8.append(chr(num))
-    finally:
-        if '%.2f' % ((num / 1114111) * 100) != percent:
-            percent = '%.2f' % ((num / 1114111) * 100)
-            print(f"\r{percent}% complete", end='', flush=True)
+# percent = 0
+# for num in range(1114111):
+#     try:
+#         chr(num).encode("utf").decode()
+#     except UnicodeEncodeError:
+#         utf_gt8.append(chr(num))
+#     finally:
+#         if '%.2f' % ((num / 1114111) * 100) != percent:
+#             percent = '%.2f' % ((num / 1114111) * 100)
+#             print(f"\r{percent}% complete", end='', flush=True)
+exclude_chars = []
+exclude_chars.extend(list(range(32)))
+exclude_chars.extend(list(range(127, 161)))
+exclude_chars.extend(list(range(8206, 8208)))
+print(exclude_chars)
 print("Done")
 # print(utf_gt8)
 
 def unicode_check(num):
+    # Currently, this returns True if it is throwing an error, else returns False. Need to decide how I want it/how I
+    # will use it.
     try:
         chr(num).encode("utf").decode()
     except UnicodeEncodeError:
         return True
-    if 32 < num > 1114111:
+    if num in exclude_chars:
+        return True
+    else:
         return False
+
+
+print(unicode_check(32))
 
 
 def let_to_dec(inpt):
