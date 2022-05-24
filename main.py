@@ -40,9 +40,7 @@ exclude_chars = []
 # exclude_chars.extend(list(range(32)))
 exclude_chars.extend(list(range(127, 160)))
 exclude_chars.extend(list(range(8206, 8208)))
-for n in exclude_chars:
-    print(chr(n), n)
-# print(utf_gt8)
+# TODO Add directional characters to the exclusion list
 
 
 def unicode_check(num):
