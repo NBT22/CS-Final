@@ -114,8 +114,10 @@ def encrypt(text, n, a, b):
                 a = (a + 1) % 1114111
                 b = (b + 1) % 1114111
                 add += 1
+                # This means that the higher n is, the longer the script will take to execute
+                # TODO Add a note saying that (^) in the GUI
                 pair_value = ((a * let_to_dec(pair)) + b) % (1114111**n)
-            # print(add)
+            print(add)
             rs += dec_to_let(pair_value, n)
             utf8 = True
         # print(rs)
@@ -153,27 +155,28 @@ class EncryptionApp(App):
         return UnicodeEncryption()
 
     def encrypt_text(self):
-        # text = self.root.ids.input.text
+        text = self.root.ids.input.text
         with open("out.txt", "w", encoding="utf-32") as file:
-            for i in range(2):
-                for j in range(1114111**i):
+            # for i in range(2):
+            #     for j in range(1114111**i):
                     try:
-                        text = dec_to_let(j, i)
+                        # text = dec_to_let(j, i)
                         # file.write(text)
                         # file.write("\n")
                         enc = encrypt(text, block_size_var, encrypt_val_1, encrypt_val_2)
-                        # file.write(enc)
+                        file.write(enc)
                         # file.write("\n")
                         dec = decrypt(enc, block_size_var, encrypt_val_1, encrypt_val_2)
                         # file.write(dec)
-                        # file.write("\n")
-                        if text == dec:
-                            continue
-                        else:
-                            file.write(f"{str(text == dec)}, {j}")
+                        file.write("\n")
+                        file.write(str(text == dec))
+                        # if text == dec:
+                        #     continue
+                        # else:
+                        #     file.write(f"{str(text == dec)}, {j}")
                         # file.write("\n\n")
                     except:
-                        continue
+                        print("NOOOOOOOOOOOOOOOOOOOOOOOO")
         print("done")
         # text = let_to_dec_blocks(text, block_size_var)
         # print(text)
@@ -181,3 +184,8 @@ class EncryptionApp(App):
 
 if __name__ == '__main__':
     EncryptionApp().run()
+    # TODO Add file handling, and a UI
+    # TODO Add a GUI file picker
+
+    # TODO If I get all missing assignments done, try to add a custom file picker,
+    #  and even support for encrypting all file types.
