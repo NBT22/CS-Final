@@ -7,7 +7,7 @@ from kivy.uix.widget import Widget
 
 
 hex_str = "0123456789ABCDEF"
-block_size_var = 10
+block_size_var = 2
 encrypt_val_1 = 347
 encrypt_val_2 = 1721
 
@@ -115,7 +115,7 @@ def encrypt(text, n, a, b):
                 # This means that the higher n is, the longer the script will take to execute
                 # TODO Add a note saying that (^) in the GUI
                 pair_value = ((a * let_to_dec(pair)) + b) % (1114111**n)
-            print(add)
+            # print(add)
             rs += dec_to_let(pair_value, n)
             utf8 = True
         # print(rs)
@@ -152,12 +152,14 @@ class EncryptionApp(App):
     def build(self):
         return UnicodeEncryption()
 
+
     def encrypt_text(self):
         text = self.root.ids.input.text
-        with open("out.txt", "w", encoding="utf-32") as file:
+        with open("out.txt", "w", encoding="utf-8") as file:
+        # file = open("out.txt", "w", encoding="utf-8")
             # for i in range(2):
             #     for j in range(1114111**i):
-                    try:
+                    # try:
                         # text = dec_to_let(j, i)
                         # file.write(text)
                         # file.write("\n")
@@ -167,17 +169,23 @@ class EncryptionApp(App):
                         dec = decrypt(enc, block_size_var, encrypt_val_1, encrypt_val_2)
                         # file.write(dec)
                         file.write("\n")
+                        file.write(dec)
+                        file.write("\n")
                         file.write(str(text == dec))
                         # if text == dec:
                         #     continue
                         # else:
                         #     file.write(f"{str(text == dec)}, {j}")
                         # file.write("\n\n")
-                    except:
-                        print("NOOOOOOOOOOOOOOOOOOOOOOOO")
+                    # except:
+                    #     print("NOOOOOOOOOOOOOOOOOOOOOOOO")
         print("done")
         # text = let_to_dec_blocks(text, block_size_var)
         # print(text)
+
+
+    def encrypt_file(self):
+        print("aa")
 
 
 if __name__ == '__main__':

@@ -4,14 +4,17 @@
 
 <UnicodeEncryption>
     BoxLayout:
-        width: root.width / 2
-        height: root.height / 2
+        orientation: "horizontal"
+        width: root.width
+        height: root.height
         TextInput:
             id: input
-    Label:
-        center_x: root.width / 2
-        center_y: root.height - 10
-        text: "Unicode Encryption Application"
-    Button:
-        text: "aaa"
-        on_release: app.encrypt_text()
+        BoxLayout:
+            size_hint_x: .25
+            orientation: "vertical"
+            Button:
+                text: "encrypt from text"
+                on_release: app.encrypt_text()
+            Button:
+                text: "aaa"
+                on_release: app.encrypt_file()
