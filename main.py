@@ -57,9 +57,10 @@ def unicode_check(num):
 # print(unicode_check(32))
 
 
-def let_to_dec(inpt):
+def let_to_dec(input):
     rn = 0
     i = 0
+    inpt = input[::-1]
     for letter in inpt:
         rn += ord(letter) * (1114111**i)
         i += 1
@@ -82,8 +83,7 @@ def dec_to_let(num, block_size):
     return rs
 
 
-def encrypt(text, n, a, b):
-    global add
+def encrypt(text: str, n, a, b):
     rs = ""
     add = 0
     text_len = len(text) + 4
@@ -93,10 +93,14 @@ def encrypt(text, n, a, b):
         extra_letters = (n * math.ceil(text_len / n)) - text_len
     for i in range(extra_letters):
         text += chr(random.randint(32, ((i * n) + 32) % 1114111))
+    print(extra_letters)
     extra_letters = dec_to_let(extra_letters, 1)
     while len(extra_letters) < 3:
         extra_letters = chr(0) + extra_letters
+    # print([ord(l) for l in extra_letters if ord(l) > 0])
+    print(let_to_dec("\u0000\u0000\u0001"))
     text = chr(8237) + extra_letters + text
+    print([ord(l) for l in text])
     i = 0
     while i < len(text):
         utf8 = False
@@ -115,18 +119,25 @@ def encrypt(text, n, a, b):
                 # This means that the higher n is, the longer the script will take to execute
                 # TODO Add a note saying that (^) in the GUI
                 pair_value = ((a * let_to_dec(pair)) + b) % (1114111**n)
-            # print(add)
+            print(add, a, b)
             rs += dec_to_let(pair_value, n)
             utf8 = True
+        # print([[ord(l) for l in s] for s in [extra_letters, text, rs]])
         # print(rs)
         i += n
-    return rs
+    # print([[ord(l) for l in rs], [ord(l) for l in rs[:1] + dec_to_let(add, 1) + rs[1:]]])
+    return rs[:1] + dec_to_let(add, 1) + rs[1:]
 
 
 def decrypt(text, n, a, b):
-    global add
+    # print([ord(l) for l in text])
+    # print([dec_to_let(l, 1) for l in [ord(l) for l in text]])
+    # print(a, b)
+    # add = ((let_to_dec(text[1]) - b) * mod_inverse(a, 1114111)) % 1114111
+    add = 0
     a = (a + add) % 1114111
     b = (b + add) % 1114111
+    # print(add, a, b)
     rs = ""
     i = 0
     while i < len(text):
@@ -137,11 +148,12 @@ def decrypt(text, n, a, b):
         rs += dec_to_let(pair_value, n)
         # print([ord(letter) for letter in dec_to_let(pair_value, n)])
         i += n
-    extra_letters = let_to_dec("".join([l for l in rs[1:4] if ord(l) > 0]))
-    # print(extra_letters)
-    # print(rs)
+    extra_letters = let_to_dec("".join([l for l in rs[2:5] if ord(l) > 0]))
+    print([ord(l) for l in rs])
+    print(extra_letters)
+    print(rs)
     # print([ord(l) for l in rs])
-    return rs[4:len(rs) - extra_letters]
+    return rs[5:len(rs) - extra_letters]
 
 
 class UnicodeEncryption(Widget):
