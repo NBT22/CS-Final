@@ -1,8 +1,42 @@
 #:import utils kivy.utils
 # used for hex color... ex:
 # utils.get_color_from_hex("#FFFFFF")
+#: import NoTransition kivy.uix.screenmanager.NoTransition
+#: import Factory kivy.factory.Factory
 
-<UnicodeEncryption>
+
+<ScreenManager>
+    transition: NoTransition()
+    HomeScreen:
+    TextEncryption:
+    FileEncryption:
+
+
+<HomeScreen@Screen>
+    name: "Home"
+    BoxLayout:
+        orientation: "vertical"
+        Label:
+            text: "Welcome to the Text Encryption App"
+            font_size: "30"
+        BoxLayout:
+            orientation: "horizontal"
+            Button:
+                text: "Text Encryption"
+                font_size: "20"
+                on_release:
+                    app.root.current = "TextEncryption"
+                    root.manager.transition = NoTransition()
+            Button:
+                text: "File Encryption"
+                font_size: "20"
+                on_release:
+                    app.root.current = "FileEncryption"
+                    root.manager.transition = NoTransition()
+
+
+<TextEncryption>
+    name: "TextEncryption"
     BoxLayout:
         orientation: "horizontal"
         width: root.width
@@ -13,8 +47,40 @@
             size_hint_x: .25
             orientation: "vertical"
             Button:
-                text: "encrypt from text"
-                on_release: app.encrypt_text()
+                text: "Encrypt the text!"
+                on_release: root.encrypt_text()
             Button:
-                text: "aaa"
-                on_release: app.encrypt_file()
+                text: "Decrypt the text!"
+                on_release: root.decrypt_text()
+
+
+<FilePicker>
+    auto_dismiss: False
+    name: "FilePicker"
+    BoxLayout:
+        orientation: "vertical"
+        FileChooserListView:
+            id: input
+            path: "./"
+        BoxLayout:
+            orientation: "horizontal"
+            size_hint_y: .1
+            Button:
+                text: "Select"
+                on_release: root.select_file(input.path, input.selection)
+            Button:
+                text: "Cancel"
+                on_release: root.dismiss()
+
+
+<FileEncryption@Screen>
+    name: "FileEncryption"
+    BoxLayout:
+        orientation: "horizontal"
+        width: root.width
+        height: root.height
+        Button:
+            text: "Select a file to encrypt"
+            on_release:
+                Factory.FilePicker().open()
+                root.manager.transition = NoTransition()
