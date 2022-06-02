@@ -1,3 +1,4 @@
+# TODO encrypt_val_2 shows up in 2 places in the encrypted text. FIX!!!
 import math
 import random
 import os
@@ -9,8 +10,14 @@ from kivy.uix.modalview import ModalView
 
 hex_str = "0123456789ABCDEF"
 block_size_var = 2
-encrypt_val_1 = 347
-encrypt_val_2 = 1721
+# TODO Implement into GUI using a number input field, to allow for more range than a slider.
+encrypt_val_1 = ord("ś")  # 347
+# Functions.let_to_dec("ś")
+encrypt_val_2 = ord("ь")  # 1100
+# TODO encrypt_val_2 shows up in 2 places in the encrypted text. FIX!!!
+# Functions.let_to_dec("ь")
+# TODO Fully implement these into the GUI, using (let_to_dec() % 1114111)
+
 
 exclude_chars = []
 exclude_chars.extend(list(range(127, 160)))
@@ -27,7 +34,7 @@ def encrypt(text, n, a, b):
         extra_letters = (n * math.ceil(text_len / n)) - text_len
     for i in range(extra_letters):
         text += chr(random.randint(0, ((i * n) % 1114079)))
-    extra_letters = functions.dec_to_let(extra_letters, 1)
+    extra_letters = Functions.dec_to_let(extra_letters, 1)
     while len(extra_letters) < 3:
         extra_letters = chr(0) + extra_letters
     text = extra_letters + text
@@ -35,19 +42,20 @@ def encrypt(text, n, a, b):
     while i < len(text):
         utf8 = False
         pair = text[i:n + i]
-        pair_value = ((a * functions.let_to_dec(pair)) + b) % (1114111**n)
+        pair_value = ((a * Functions.let_to_dec(pair)) + b) % (1114111**n)
         while utf8 is False:
-            while functions.dec_to_let(pair_value, n) is False:
+            while Functions.dec_to_let(pair_value, n) is False:
                 a = (a + 1) % 1114111
                 b = (b + 1) % 1114111
                 add += 1
                 # This means that the higher n is, the longer the script will take to execute
                 # TODO Add a note saying that (^) in the GUI
-                pair_value = ((a * functions.let_to_dec(pair)) + b) % (1114111**n)
-            rs += functions.dec_to_let(pair_value, n)
+                pair_value = ((a * Functions.let_to_dec(pair)) + b) % (1114111**n)
+            rs += Functions.dec_to_let(pair_value, n)
             utf8 = True
         i += n
-    return functions.dec_to_let(add, 1) + rs
+    return Functions.dec_to_let(add, 1) + rs
+# TODO encrypt_val_2 shows up in 2 places in the encrypted text. FIX!!!
 
 
 def decrypt(text, n, a, b):
@@ -60,27 +68,28 @@ def decrypt(text, n, a, b):
     nl = []
     while i < len(text):
         pair = text[i:n + i]
-        pair_value = ((functions.let_to_dec(pair) - b) * functions.mod_inverse(a, 1114111**n)) % (1114111**n)
-        rs += functions.dec_to_let(pair_value, n)
+        pair_value = ((Functions.let_to_dec(pair) - b) * Functions.mod_inverse(1114111**n)) % (1114111**n)
+        rs += Functions.dec_to_let(pair_value, n)
         i += n
-    extra_letters = (functions.let_to_dec("".join([l for l in rs[0:3] if ord(l) > 0]))) + 1  # (+ 1) to remove the random hanging null byte...
+    extra_letters = (Functions.let_to_dec("".join([l for l in rs[0:3] if ord(l) > 0]))) + 1  # (+ 1) to remove the random hanging null byte...
     return rs[3:len(rs) - extra_letters]
 
 
-class functions():
+class Functions:
+    @staticmethod
     def mod_inverse_helper(a, b):
         q, r = a//b, a % b
         if r == 1:
             return 1, -1 * q
-        u, v = functions.mod_inverse_helper(b, r)
+        u, v = Functions.mod_inverse_helper(r)
         return v, -1 * q * v + u
 
-
+    @staticmethod
     def mod_inverse(a, m):
         assert math.gcd(a, m) == 1, "You're trying to invert " + str(a) + " in mod " + str(m) + " and that doesn't work!"
-        return functions.mod_inverse_helper(m, a)[1] % m
+        return Functions.mod_inverse_helper(a)[1] % m
 
-
+    @staticmethod
     def hex_to_dec(inpt):
         rn = 0
         i = 0
@@ -91,7 +100,7 @@ class functions():
             i += 1
         return rn
 
-
+    @staticmethod
     def unicode_check(num):
         try:
             chr(num).encode("utf").decode()
@@ -102,7 +111,7 @@ class functions():
         else:
             return False
 
-
+    @staticmethod
     def let_to_dec(inpt):
         rn = 0
         i = 0
@@ -111,17 +120,20 @@ class functions():
             i += 1
         return rn
 
-
+    @staticmethod
     def dec_to_let(num, block_size):
         rs = ""
         nm = num
         for i in range(block_size):
-            if functions.unicode_check(nm % 1114111):
+            if Functions.unicode_check(nm % 1114111):
                 return False
             else:
                 rs += chr(nm % 1114111)
                 nm //= 1114111
         return rs
+
+
+print(Functions.dec_to_let(347, 1), Functions.dec_to_let(1100, 1))
 
 
 class ScreenManager(ScreenManager):
@@ -176,6 +188,7 @@ class EncryptionApp(App):
         return ScreenManager()
 
 
+# TODO encrypt_val_2 shows up in 2 places in the encrypted text. FIX!!!
 if __name__ == '__main__':
     EncryptionApp().run()
     # TODO Add file handling
