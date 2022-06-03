@@ -3,9 +3,12 @@ import math
 import random
 import os
 
+from kivy.config import Config
 from kivy.app import App
 from kivy.uix.screenmanager import ScreenManager, Screen
+from kivy.uix.tabbedpanel import TabbedPanel
 from kivy.uix.modalview import ModalView
+Config.set('input', 'mouse', 'mouse,multitouch_on_demand')
 
 
 hex_str = "0123456789ABCDEF"
@@ -68,7 +71,7 @@ def decrypt(text, n, a, b):
     nl = []
     while i < len(text):
         pair = text[i:n + i]
-        pair_value = ((Functions.let_to_dec(pair) - b) * Functions.mod_inverse(1114111**n)) % (1114111**n)
+        pair_value = ((Functions.let_to_dec(pair) - b) * Functions.mod_inverse(a, 1114111**n)) % (1114111**n)
         rs += Functions.dec_to_let(pair_value, n)
         i += n
     extra_letters = (Functions.let_to_dec("".join([l for l in rs[0:3] if ord(l) > 0]))) + 1  # (+ 1) to remove the random hanging null byte...
@@ -81,13 +84,13 @@ class Functions:
         q, r = a//b, a % b
         if r == 1:
             return 1, -1 * q
-        u, v = Functions.mod_inverse_helper(r)
+        u, v = Functions.mod_inverse_helper(b, r)
         return v, -1 * q * v + u
 
     @staticmethod
     def mod_inverse(a, m):
         assert math.gcd(a, m) == 1, "You're trying to invert " + str(a) + " in mod " + str(m) + " and that doesn't work!"
-        return Functions.mod_inverse_helper(a)[1] % m
+        return Functions.mod_inverse_helper(m, a)[1] % m
 
     @staticmethod
     def hex_to_dec(inpt):
@@ -136,56 +139,43 @@ class Functions:
 print(Functions.dec_to_let(347, 1), Functions.dec_to_let(1100, 1))
 
 
-class ScreenManager(ScreenManager):
-    pass
-
-
-class TextEncryption(Screen):
+class MainUI(TabbedPanel):
     def encrypt_text(self):
-        text = self.ids.input.text
         with open("out.txt", "w", encoding="utf-8") as file:
-            enc = encrypt(text, block_size_var, encrypt_val_1, encrypt_val_2)
-            file.write(enc)
-            # file.write("\n")
-            # file.write(str([ord(l) for l in enc]))
-            # file.write("\n")
-            # dec = decrypt(enc, block_size_var, encrypt_val_1, encrypt_val_2)
-            # file.write(dec)
-            # file.write("\n")
-            # file.write(dec)
-            # file.write("\n")
-            # file.write(str([ord(l) for l in dec]))
-            # file.write("\n")
-            # file.write(str(text == dec))
-        # print("done")
-        # text = let_to_dec_blocks(text, block_size_var)
-        # print(text)
+            file.write(encrypt(self.ids.input.text, block_size_var, encrypt_val_1, encrypt_val_2))
 
     def decrypt_text(self):
-        return self
+        self.ids.input.text = decrypt(self.ids.input.text, block_size_var, encrypt_val_1, encrypt_val_2)
 
-
-class FileEncryption(Screen):
-    def select_file(self, path, filename):
-        global file  # Accessed by encrypt_file()
+    @staticmethod
+    def select_file(path, filename):
+        global file  # Accessed by encrypt_file() and decrypt_file()
         file = open(os.path.join(path, filename[0]), "r", encoding="utf-8")
-    
-    
-    def encrypt_file(self):
+
+    @staticmethod
+    def encrypt_file():
         # file.seek(0)
         enc = encrypt(file.read(), block_size_var, encrypt_val_1, encrypt_val_2)
         file.close()
-    
 
-    def decrypt_file(self):
+    @staticmethod
+    def decrypt_file():
         # file.seek(0)
         dec = decrypt(file.read(), block_size_var, encrypt_val_1, encrypt_val_2)
         file.close()
 
 
+class MainSettings(ModalView):
+    def save(self):
+        global block_size_var
+        block_size_var = self.ids.block_size.text
+        print(block_size_var)
+        self.dismiss()
+
+
 class EncryptionApp(App):
     def build(self):
-        return ScreenManager()
+        return MainUI()
 
 
 # TODO encrypt_val_2 shows up in 2 places in the encrypted text. FIX!!!

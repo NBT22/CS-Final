@@ -5,73 +5,71 @@
 #: import Factory kivy.factory.Factory
 
 
-<ScreenManager>
-    transition: NoTransition()
-    HomeScreen:
-    TextEncryption:
-    FileEncryption:
+#<ScreenManager>
+#    transition: NoTransition()
+#    HomeScreen:
+#    TextEncryption:
+#    FileEncryption:
 
 
-<HomeScreen@Screen>
-    name: "Home"
-    BoxLayout:
-        orientation: "vertical"
-        Label:
-            text: "Welcome to the Text Encryption App"
-            font_size: "30"
-        Button:
-            on_release:
-                Factory.MainSettings().open()
-                root.manager.transition = NoTransition()
+<MainUI>:
+    do_default_tab: False
+    TabbedPanelItem:
+        text: "Settings"
         BoxLayout:
-            orientation: "horizontal"
-            Button:
-                text: "Text Encryption"
-                font_size: "20"
-                on_release:
-                    app.root.current = "TextEncryption"
-                    root.manager.transition = NoTransition()
-            Button:
-                text: "File Encryption"
-                font_size: "20"
-                on_release:
-                    app.root.current = "FileEncryption"
-                    root.manager.transition = NoTransition()
-
-
-<MainSettings@ModalView>
-    auto_dismiss: False
-    name: "Settings"
-    BoxLayout:
-        orientation: "horizontal"
-        Button:
-            text: "Close"
-            on_release:
-                root.dismiss()
-        Slider:
-            id: slider
-            min: 0
-            max: 100
-            step: 1
-            orientation: "horizontal"
-            value: app.root.block_size_var
-
-
-<TextEncryption>
-    name: "TextEncryption"
-    BoxLayout:
-        orientation: "horizontal"
-        TextInput:
-            id: input
-        BoxLayout:
-            size_hint_x: .25
             orientation: "vertical"
+            BoxLayout:
+                orientation: "horizontal"
+                TextInput:
+                    id: block_size
+                    input_filter: "int"
+                    multiline: False
+                TextInput:
+                    multiline: False
+                TextInput:
+                    multiline: False
+            BoxLayout:
+                orientation: "horizontal"
+                Button:
+                    text: "Save and Close"
+                    on_release:
+                        root.save()
+                        root.dismiss()
+                Button:
+                    text: "Close Without Saving Changes"
+                    on_release:
+                        root.dismiss()
+    TabbedPanelItem:
+        text: "Text\nEncryption"
+        BoxLayout:
+            orientation: "horizontal"
+            TextInput:
+                id: input
+            BoxLayout:
+                size_hint_x: .25
+                orientation: "vertical"
+                Button:
+                    text: "Encrypt the text!"
+                    on_release: root.encrypt_text()
+                Button:
+                    text: "Decrypt the text!"
+                    on_release: root.decrypt_text()
+    TabbedPanelItem:
+        text: "File\nEncryption"
+        BoxLayout:
+            orientation: "vertical"
+            BoxLayout:
+                orientation: "horizontal"
+                Button:
+                    text: "Encrypt the file!"
+                    on_release: root.encrypt_file()
+                Button:
+                    text: "Decrypt the file!"
+                    on_release: root.decrypt_file()
             Button:
-                text: "Encrypt the text!"
-                on_release: root.encrypt_text()
-            Button:
-                text: "Decrypt the text!"
-                on_release: root.decrypt_text()
+                text: "Select a file to encrypt"
+                on_release:
+                    Factory.FilePicker().open()
 
 
 <FilePicker@ModalView>
@@ -88,27 +86,8 @@
             Button:
                 text: "Select"
                 on_release:
-                    Factory.FileEncryption().select_file(input.path, input.selection)
+                    Factory.MainUI().select_file(input.path, input.selection)
                     root.dismiss()
             Button:
                 text: "Cancel"
                 on_release: root.dismiss()
-
-
-<FileEncryption>
-    name: "FileEncryption"
-    BoxLayout:
-        orientation: "vertical"
-        BoxLayout:
-            orientation: "horizontal"
-            Button:
-                text: "Encrypt the file!"
-                on_release: root.encrypt_file()
-            Button:
-                text: "Decrypt the file!"
-                on_release: root.decrypt_file()
-        Button:
-            text: "Select a file to encrypt"
-            on_release:
-                Factory.FilePicker().open()
-                root.manager.transition = NoTransition()
