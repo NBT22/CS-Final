@@ -1,32 +1,23 @@
-# TODO encrypt_val_2 shows up in 2 places in the encrypted text. FIX!!!
+# General imports
 import math
 import random
 import os
 
+# Imports for the GUI
 from kivy.config import Config
 from kivy.app import App
-from kivy.uix.screenmanager import ScreenManager, Screen
 from kivy.uix.tabbedpanel import TabbedPanel
 from kivy.uix.modalview import ModalView
-Config.set('input', 'mouse', 'mouse,multitouch_on_demand')
+Config.set('input', 'mouse', 'mouse,multitouch_on_demand')  # Set the config for desktop
 
 
+# Creating general variables
 hex_str = "0123456789ABCDEF"
 block_size_var = 2
-# TODO Implement into GUI using a number input field, to allow for more range than a slider.
-encrypt_val_1 = ord("ś")  # 347
-# Functions.let_to_dec("ś")
-encrypt_val_2 = ord("ь")  # 1100
-# TODO encrypt_val_2 shows up in 2 places in the encrypted text. FIX!!!
-# Functions.let_to_dec("ь")
-# TODO Fully implement these into the GUI, using (let_to_dec() % 1114111)
+exclude_chars = list(range(127, 160))
 
 
-exclude_chars = []
-exclude_chars.extend(list(range(127, 160)))
-exclude_chars.extend(list(range(8206, 8208)))
-
-
+# This function will encrypt a string using the given parameters.
 def encrypt(text, n, a, b):
     rs = ""
     add = 0
@@ -61,6 +52,7 @@ def encrypt(text, n, a, b):
 # TODO encrypt_val_2 shows up in 2 places in the encrypted text. FIX!!!
 
 
+# This function will decrypt a string using the given parameters.
 def decrypt(text, n, a, b):
     add = ord(text[0])
     a = (a + add) % 1114111
@@ -78,8 +70,9 @@ def decrypt(text, n, a, b):
     return rs[3:len(rs) - extra_letters]
 
 
+# This is a class for general functions.
 class Functions:
-    @staticmethod
+    @staticmethod  # This is a static method, meaning that it can be called without an instance of the class.
     def mod_inverse_helper(a, b):
         q, r = a//b, a % b
         if r == 1:
@@ -87,11 +80,13 @@ class Functions:
         u, v = Functions.mod_inverse_helper(b, r)
         return v, -1 * q * v + u
 
+    # This function is for the decryption.
     @staticmethod
     def mod_inverse(a, m):
-        assert math.gcd(a, m) == 1, "You're trying to invert " + str(a) + " in mod " + str(m) + " and that doesn't work!"
+        assert math.gcd(a, m) == 1, f"You're trying to invert {str(a)} in mod {str(m)} and that doesn't work!"
         return Functions.mod_inverse_helper(m, a)[1] % m
 
+    # This function will convert a hexadecimal value to a base 10 value.
     @staticmethod
     def hex_to_dec(inpt):
         rn = 0
@@ -103,6 +98,7 @@ class Functions:
             i += 1
         return rn
 
+    # This function will check if a string is part of UTF-8 and not part of the control characters I have excluded.
     @staticmethod
     def unicode_check(num):
         try:
@@ -114,6 +110,7 @@ class Functions:
         else:
             return False
 
+    # This function will take a string and convert it to a base 10 value, using each letters' unicode values.
     @staticmethod
     def let_to_dec(inpt):
         rn = 0
@@ -123,6 +120,7 @@ class Functions:
             i += 1
         return rn
 
+    # This function will take a number and convert it to a string, using each letters' unicode values.
     @staticmethod
     def dec_to_let(num, block_size):
         rs = ""
@@ -136,41 +134,71 @@ class Functions:
         return rs
 
 
-print(Functions.dec_to_let(347, 1), Functions.dec_to_let(1100, 1))
+# TODO Implement into GUI using a number input field, to allow for more range than a slider.
+encrypt_key_1 = "Encryption Key One"
+encrypt_key_2 = "Encryption Key Two"
+encrypt_val_1 = Functions.let_to_dec(encrypt_key_1)
+encrypt_val_2 = Functions.let_to_dec(encrypt_key_2)
+# TODO Fully implement these into the GUI, using (let_to_dec() % 1114111).
 
 
+# This is the class for the GUI.
 class MainUI(TabbedPanel):
-    def encrypt_text(self):
-        with open("out.txt", "w", encoding="utf-8") as file:
-            file.write(encrypt(self.ids.input.text, block_size_var, encrypt_val_1, encrypt_val_2))
+    block_size_var = block_size_var
+    encrypt_key_1 = encrypt_key_1
+    encrypt_key_2 = encrypt_key_2
 
+    # Takes the text from the input field and encrypts it.
+    def encrypt_text(self):
+        with open("out.txt", "w", encoding="utf-8") as f:
+            f.write(encrypt(self.ids.input.text, block_size_var, encrypt_val_1, encrypt_val_2))
+
+    # Takes the text from the input field and decrypts it.
     def decrypt_text(self):
         self.ids.input.text = decrypt(self.ids.input.text, block_size_var, encrypt_val_1, encrypt_val_2)
 
+    # Selects the active file.
     @staticmethod
     def select_file(path, filename):
         global file  # Accessed by encrypt_file() and decrypt_file()
         file = open(os.path.join(path, filename[0]), "r", encoding="utf-8")
 
+    # Encrypts the selected file.
     @staticmethod
     def encrypt_file():
         # file.seek(0)
         enc = encrypt(file.read(), block_size_var, encrypt_val_1, encrypt_val_2)
         file.close()
 
+    # Decrypts the selected file.
     @staticmethod
     def decrypt_file():
         # file.seek(0)
         dec = decrypt(file.read(), block_size_var, encrypt_val_1, encrypt_val_2)
         file.close()
 
-
-class MainSettings(ModalView):
+    # This saves the current changes to the settings.
     def save(self):
+        # Global vars so that the rest of the program can access the changed settings.
         global block_size_var
+        global encrypt_key_1
+        global encrypt_key_2
+        global encrypt_val_1
+        global encrypt_val_2
+        # Sets the global vars to the current values in the GUI.
         block_size_var = self.ids.block_size.text
-        print(block_size_var)
-        self.dismiss()
+        encrypt_key_1 = self.ids.encrypt_key_1.text
+        encrypt_key_2 = self.ids.encrypt_key_2.text
+        encrypt_val_1 = Functions.let_to_dec(encrypt_key_1)
+        encrypt_val_2 = Functions.let_to_dec(encrypt_key_2)
+        # TODO Save the settings to a file.
+        # TODO Add a modal dialog confirming that the settings have been saved.
+
+    # This discards the current changes to the settings.
+    def discard(self):
+        self.ids.block_size.text = str(block_size_var)
+        self.ids.encrypt_key_1.text = encrypt_key_1
+        self.ids.encrypt_key_2.text = encrypt_key_2
 
 
 class EncryptionApp(App):
@@ -178,7 +206,6 @@ class EncryptionApp(App):
         return MainUI()
 
 
-# TODO encrypt_val_2 shows up in 2 places in the encrypted text. FIX!!!
 if __name__ == '__main__':
     EncryptionApp().run()
     # TODO Add file handling

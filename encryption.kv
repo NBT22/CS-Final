@@ -24,21 +24,25 @@
                     id: block_size
                     input_filter: "int"
                     multiline: False
+                    text: str(root.block_size_var)
                 TextInput:
+                    id: encrypt_key_1
                     multiline: False
+                    text: str(root.encrypt_key_1)
                 TextInput:
+                    id: encrypt_key_2
                     multiline: False
+                    text: str(root.encrypt_key_2)
             BoxLayout:
                 orientation: "horizontal"
                 Button:
-                    text: "Save and Close"
+                    text: "Save Changes"
                     on_release:
                         root.save()
-                        root.dismiss()
                 Button:
-                    text: "Close Without Saving Changes"
+                    text: "Discard Changes"
                     on_release:
-                        root.dismiss()
+                        root.discard()
     TabbedPanelItem:
         text: "Text\nEncryption"
         BoxLayout:
