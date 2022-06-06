@@ -8,6 +8,7 @@ from kivy.config import Config
 from kivy.app import App
 from kivy.uix.tabbedpanel import TabbedPanel
 from kivy.uix.modalview import ModalView
+from sympy import GoldenRatio
 Config.set('input', 'mouse', 'mouse,multitouch_on_demand')  # Set the config for desktop
 
 
@@ -25,9 +26,10 @@ def encrypt(text, n, a, b):
     if n > text_len:
         extra_letters = n - text_len
     else:
-        extra_letters = (n * math.ceil(text_len / n)) - text_len
+        extra_letters = (n * math.ceil(text_len / n)) - text_len  # TODO DEVIDE BY 0 ERROR if N is 0
     for i in range(extra_letters):
         text += chr(random.randint(0, ((i * n) % 1114079)))
+    # print(extra_letters)
     extra_letters = Functions.dec_to_let(extra_letters, 1)
     while len(extra_letters) < 3:
         extra_letters = chr(0) + extra_letters
@@ -38,7 +40,7 @@ def encrypt(text, n, a, b):
         pair = text[i:n + i]
         pair_value = ((a * Functions.let_to_dec(pair)) + b) % (1114111**n)
         while utf8 is False:
-            while Functions.dec_to_let(pair_value, n) is False:
+            while Functions.dec_to_let_check(pair_value, n) is False:
                 a = (a + 1) % 1114111
                 b = (b + 1) % 1114111
                 add += 1
@@ -48,6 +50,8 @@ def encrypt(text, n, a, b):
             rs += Functions.dec_to_let(pair_value, n)
             utf8 = True
         i += n
+    # print([ord(l) for l in rs])
+    # print([ord(l) for l in text])
     return Functions.dec_to_let(add, 1) + rs
 # TODO encrypt_val_2 shows up in 2 places in the encrypted text. FIX!!!
 
@@ -60,10 +64,21 @@ def decrypt(text, n, a, b):
     text = text[1:]
     rs = ""
     i = 0
-    nl = []
     while i < len(text):
+        utf8 = False
         pair = text[i:n + i]
+        print([ord(l) for l in pair])
         pair_value = ((Functions.let_to_dec(pair) - b) * Functions.mod_inverse(a, 1114111**n)) % (1114111**n)
+        # while utf8 is False:
+        #     while Functions.dec_to_let(pair_value, n) is False:
+        #         a = (a + 1) % 1114111
+        #         b = (b + 1) % 1114111
+        #         add += 1
+        #         # This means that the higher n is, the longer the script will take to execute
+        #         # TODO Add a note saying that (^) in the GUI
+        #         pair_value = ((Functions.let_to_dec(pair) - b) * Functions.mod_inverse(a, 1114111**n)) % (1114111**n)
+        #     rs += Functions.dec_to_let(pair_value, n)
+        #     utf8 = True
         rs += Functions.dec_to_let(pair_value, n)
         i += n
     extra_letters = (Functions.let_to_dec("".join([l for l in rs[0:3] if ord(l) > 0]))) + 1  # (+ 1) to remove the random hanging null byte...
@@ -126,19 +141,26 @@ class Functions:
         rs = ""
         nm = num
         for i in range(block_size):
+            rs += chr(nm % 1114111)
+            nm //= 1114111
+        return rs
+    
+    @staticmethod
+    def dec_to_let_check(num, block_size):
+        nm = num
+        for i in range(block_size):
             if Functions.unicode_check(nm % 1114111):
                 return False
             else:
-                rs += chr(nm % 1114111)
-                nm //= 1114111
-        return rs
+                return True
+        return
 
 
 # TODO Implement into GUI using a number input field, to allow for more range than a slider.
 encrypt_key_1 = "Encryption Key One"
 encrypt_key_2 = "Encryption Key Two"
-encrypt_val_1 = Functions.let_to_dec(encrypt_key_1)
-encrypt_val_2 = Functions.let_to_dec(encrypt_key_2)
+encrypt_val_1 = Functions.let_to_dec(encrypt_key_1) % 1114111
+encrypt_val_2 = Functions.let_to_dec(encrypt_key_2) % 1114111
 # TODO Fully implement these into the GUI, using (let_to_dec() % 1114111).
 
 
@@ -147,11 +169,19 @@ class MainUI(TabbedPanel):
     block_size_var = block_size_var
     encrypt_key_1 = encrypt_key_1
     encrypt_key_2 = encrypt_key_2
-
+    output_to_file = True
+        
     # Takes the text from the input field and encrypts it.
     def encrypt_text(self):
         with open("out.txt", "w", encoding="utf-8") as f:
-            f.write(encrypt(self.ids.input.text, block_size_var, encrypt_val_1, encrypt_val_2))
+            enc = encrypt(self.ids.input.text, block_size_var, encrypt_val_1, encrypt_val_2)
+            dec = decrypt(enc, block_size_var, encrypt_val_1, encrypt_val_2)
+            if self.ids.input.text == dec:
+                f.write(str(self.ids.input.text == dec))
+            else:
+                f.write(str(self.ids.input.text == dec))
+                f.write("\n")
+                f.write(str(dec))
 
     # Takes the text from the input field and decrypts it.
     def decrypt_text(self):
@@ -167,14 +197,27 @@ class MainUI(TabbedPanel):
     @staticmethod
     def encrypt_file():
         # file.seek(0)
+        global enc
         enc = encrypt(file.read(), block_size_var, encrypt_val_1, encrypt_val_2)
+        if MainUI.output_to_file:
+            with open("out.txt", "w", encoding="utf-8") as f:
+                f.write(enc)
+        else:
+            print(enc)
         file.close()
 
     # Decrypts the selected file.
     @staticmethod
     def decrypt_file():
         # file.seek(0)
-        dec = decrypt(file.read(), block_size_var, encrypt_val_1, encrypt_val_2)
+        read = file.read()
+        dec = decrypt(read, block_size_var, encrypt_val_1, encrypt_val_2)
+        if MainUI.output_to_file:
+            print(dec)
+            with open("out.txt", "w", encoding="utf-8") as f:
+                f.write(read)
+        else:
+            print(dec)
         file.close()
 
     # This saves the current changes to the settings.
@@ -186,11 +229,12 @@ class MainUI(TabbedPanel):
         global encrypt_val_1
         global encrypt_val_2
         # Sets the global vars to the current values in the GUI.
-        block_size_var = self.ids.block_size.text
+        block_size_var = abs(int(self.ids.block_size.text))  # TODO Don't allow 0.
         encrypt_key_1 = self.ids.encrypt_key_1.text
         encrypt_key_2 = self.ids.encrypt_key_2.text
-        encrypt_val_1 = Functions.let_to_dec(encrypt_key_1)
-        encrypt_val_2 = Functions.let_to_dec(encrypt_key_2)
+        encrypt_val_1 = Functions.let_to_dec(encrypt_key_1) % 1114111
+        encrypt_val_2 = Functions.let_to_dec(encrypt_key_2) % 1114111
+        MainUI.output_to_file = True if self.ids.output_to_file.state == "down" else False
         # TODO Save the settings to a file.
         # TODO Add a modal dialog confirming that the settings have been saved.
 
@@ -199,6 +243,7 @@ class MainUI(TabbedPanel):
         self.ids.block_size.text = str(block_size_var)
         self.ids.encrypt_key_1.text = encrypt_key_1
         self.ids.encrypt_key_2.text = encrypt_key_2
+        self.ids.output_to_file.state = "down" if MainUI.output_to_file else "normal"
 
 
 class EncryptionApp(App):
@@ -207,6 +252,8 @@ class EncryptionApp(App):
 
 
 if __name__ == '__main__':
+    for i in range(1, 100):
+        print(decrypt(encrypt("asd", i, encrypt_val_1, encrypt_val_2), i, encrypt_val_1, encrypt_val_2) == "asd")
     EncryptionApp().run()
     # TODO Add file handling
 

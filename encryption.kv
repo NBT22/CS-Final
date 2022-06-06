@@ -1,15 +1,5 @@
-#:import utils kivy.utils
-# used for hex color... ex:
-# utils.get_color_from_hex("#FFFFFF")
 #: import NoTransition kivy.uix.screenmanager.NoTransition
 #: import Factory kivy.factory.Factory
-
-
-#<ScreenManager>
-#    transition: NoTransition()
-#    HomeScreen:
-#    TextEncryption:
-#    FileEncryption:
 
 
 <MainUI>:
@@ -33,6 +23,10 @@
                     id: encrypt_key_2
                     multiline: False
                     text: str(root.encrypt_key_2)
+                ToggleButton:
+                    id: output_to_file
+                    text: "Output to File Enabled"
+                    state: "down" if root.output_to_file else "normal"
             BoxLayout:
                 orientation: "horizontal"
                 Button:
