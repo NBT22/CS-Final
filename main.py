@@ -235,8 +235,9 @@ class MainUI(TabbedPanel):
             Factory.KeyError().open()  # Open the key error popup.
         MainUI.output_file_name = self.ids.output_file_name.text
         if self.ids.output_to_file.state == "normal":
+            value_error = True  # Error tracking.
+            self.ids.output_to_file.state = "down"  # Reset the output to file button down.
             Factory.FileOutputError().open()  # Open the file output error popup.
-            self.ids.output_to_file.state = "down"
         if self.ids.code_execution.state == "down":  # If the button is pressed.
             MainUI.code_execution = True  # This will be used to determine if the decrypted file should be executed.
         else:

@@ -5,60 +5,17 @@
 
 <MainUI>:  # Defines the entire UI, except for popups.
     do_default_tab: False
-    TabbedPanelItem:  # Defines the settings tab.
-        text: "Settings"
-        BoxLayout:  # Defines the layout of the settings tab.
-            orientation: "vertical"
-            BoxLayout:  # Defines the layout of the top section of the settings tab.
-                orientation: "horizontal"
-                BoxLayout:  # Defines the layout of the left section of the top section of the settings tab.
-                    orientation: "vertical"
-                    TextInput:
-                        id: block_size
-                        input_filter: "int"
-                        multiline: False
-                        text: str(root.block_size_var)
-                    Label:
-                        size_hint_y: 0.5
-                        halign: "center"
-                        text: "Warning: The higher the block\nsize, the more time it will take\nto encrypt or decrypt."
-                TextInput:
-                    id: encrypt_key_1
-                    multiline: False
-                    text: str(root.encrypt_key_1)
-                TextInput:
-                    id: encrypt_key_2
-                    multiline: False
-                    text: str(root.encrypt_key_2)
-            BoxLayout:
-                size_hint_y: .075
-            BoxLayout:  # Defines the layout of the middle section of the settings tab.
-                orientation: "horizontal"
-                ToggleButton:
-                    id: output_to_file
-                    text: "Output to File Enabled"
-                    state: "down"
-                TextInput:
-                    id: output_file_name
-                    multiline: False
-                    text: str(root.output_file_name)
-                ToggleButton:
-                    id: code_execution
-                    text: "Execute Encrypted File Enabled"
-                    state: "down" if root.code_execution else "normal"
-            BoxLayout:  # Adds a spacer between the top two sections and the bottom section.
-                size_hint_y: .2
-            BoxLayout:  # Defines the layout of the bottom section of the settings tab.
-                orientation: "horizontal"
-                size_hint_y: .4
-                Button:
-                    text: "Save Changes"
-                    on_release:
-                        root.save()
-                Button:
-                    text: "Discard Changes"
-                    on_release:
-                        root.discard()
+    TabbedPanelItem:  # Defines the first tab.
+        text: 'Home'
+        BoxLayout:
+            orientation: 'vertical'
+            Label:
+                text: 'Welcome to the unicode encryption app!'
+                halign: 'center'
+                valign: 'middle'
+            Button:
+                text: 'Go to settings'
+                on_release: root.switch_to(root.ids.settings_tab)
     TabbedPanelItem:  # Defines the text encryption tab.
         text: "Text\nEncryption"
         BoxLayout:  # Defines the layout of the text encryption tab.
@@ -114,6 +71,61 @@
                     on_release:
                         try: root.execute_file()
                         except: root.pick_file_execute()
+    TabbedPanelItem:  # Defines the settings tab.
+        id: settings_tab
+        text: "Settings"
+        BoxLayout:  # Defines the layout of the settings tab.
+            orientation: "vertical"
+            BoxLayout:  # Defines the layout of the top section of the settings tab.
+                orientation: "horizontal"
+                BoxLayout:  # Defines the layout of the left section of the top section of the settings tab.
+                    orientation: "vertical"
+                    TextInput:
+                        id: block_size
+                        input_filter: "int"
+                        multiline: False
+                        text: str(root.block_size_var)
+                    Label:
+                        size_hint_y: 0.5
+                        halign: "center"
+                        text: "Warning: The higher the block\nsize, the more time it will take\nto encrypt or decrypt."
+                TextInput:
+                    id: encrypt_key_1
+                    multiline: False
+                    text: str(root.encrypt_key_1)
+                TextInput:
+                    id: encrypt_key_2
+                    multiline: False
+                    text: str(root.encrypt_key_2)
+            BoxLayout:
+                size_hint_y: .075
+            BoxLayout:  # Defines the layout of the middle section of the settings tab.
+                orientation: "horizontal"
+                ToggleButton:
+                    id: output_to_file
+                    text: "Output to File Enabled"
+                    state: "down"
+                TextInput:
+                    id: output_file_name
+                    multiline: False
+                    text: str(root.output_file_name)
+                ToggleButton:
+                    id: code_execution
+                    text: "Execute Encrypted File Enabled"
+                    state: "down" if root.code_execution else "normal"
+            BoxLayout:  # Adds a spacer between the top two sections and the bottom section.
+                size_hint_y: .2
+            BoxLayout:  # Defines the layout of the bottom section of the settings tab.
+                orientation: "horizontal"
+                size_hint_y: .4
+                Button:
+                    text: "Save Changes"
+                    on_release:
+                        root.save()
+                Button:
+                    text: "Discard Changes"
+                    on_release:
+                        root.discard()
 
 
 # Defines the file picker popup.
