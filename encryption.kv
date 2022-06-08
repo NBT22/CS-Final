@@ -1,20 +1,27 @@
 #: import NoTransition kivy.uix.screenmanager.NoTransition
 #: import Factory kivy.factory.Factory
+#: import TextInput kivy.uix.textinput.TextInput
 
 
-<MainUI>:
+<MainUI>:  # Defines the entire UI, except for popups.
     do_default_tab: False
-    TabbedPanelItem:
+    TabbedPanelItem:  # Defines the settings tab.
         text: "Settings"
-        BoxLayout:
+        BoxLayout:  # Defines the layout of the settings tab.
             orientation: "vertical"
-            BoxLayout:
+            BoxLayout:  # Defines the layout of the top section of the settings tab.
                 orientation: "horizontal"
-                TextInput:
-                    id: block_size
-                    input_filter: "int"
-                    multiline: False
-                    text: str(root.block_size_var)
+                BoxLayout:  # Defines the layout of the left section of the top section of the settings tab.
+                    orientation: "vertical"
+                    TextInput:
+                        id: block_size
+                        input_filter: "int"
+                        multiline: False
+                        text: str(root.block_size_var)
+                    Label:
+                        size_hint_y: 0.5
+                        halign: "center"
+                        text: "Warning: The higher the block\nsize, the more time it will take\nto encrypt or decrypt."
                 TextInput:
                     id: encrypt_key_1
                     multiline: False
@@ -23,12 +30,27 @@
                     id: encrypt_key_2
                     multiline: False
                     text: str(root.encrypt_key_2)
+            BoxLayout:
+                size_hint_y: .075
+            BoxLayout:  # Defines the layout of the middle section of the settings tab.
+                orientation: "horizontal"
                 ToggleButton:
                     id: output_to_file
                     text: "Output to File Enabled"
-                    state: "down" if root.output_to_file else "normal"
-            BoxLayout:
+                    state: "down"
+                TextInput:
+                    id: output_file_name
+                    multiline: False
+                    text: str(root.output_file_name)
+                ToggleButton:
+                    id: code_execution
+                    text: "Execute Encrypted File Enabled"
+                    state: "down" if root.code_execution else "normal"
+            BoxLayout:  # Adds a spacer between the top two sections and the bottom section.
+                size_hint_y: .2
+            BoxLayout:  # Defines the layout of the bottom section of the settings tab.
                 orientation: "horizontal"
+                size_hint_y: .4
                 Button:
                     text: "Save Changes"
                     on_release:
@@ -37,55 +59,171 @@
                     text: "Discard Changes"
                     on_release:
                         root.discard()
-    TabbedPanelItem:
+    TabbedPanelItem:  # Defines the text encryption tab.
         text: "Text\nEncryption"
-        BoxLayout:
+        BoxLayout:  # Defines the layout of the text encryption tab.
             orientation: "horizontal"
-            TextInput:
-                id: input
-            BoxLayout:
+            BoxLayout:  # Defines the layout of the left side of the text encryption tab.
+                orientation: "vertical"
+                id: text_operations
+                TextInput:  # Defines the input field for the text to be encrypted.
+                    id: input
+            BoxLayout:  # Defines the layout of the right side of the text encryption tab.
                 size_hint_x: .25
                 orientation: "vertical"
                 Button:
                     text: "Encrypt the text!"
                     on_release: root.encrypt_text()
-                Button:
-                    text: "Decrypt the text!"
-                    on_release: root.decrypt_text()
-    TabbedPanelItem:
+# Decryption from text field does not work, due to not being able to enter all of the characters into the text field,
+#  along with not being able to copy `NULL`.
+#                Button:
+#                    text: "Decrypt the text!"
+#                    on_release: print(root.ids)
+    TabbedPanelItem:  # Defines the file encryption tab.
         text: "File\nEncryption"
-        BoxLayout:
+        BoxLayout:  # Defines the layout of the file encryption tab.
             orientation: "vertical"
-            BoxLayout:
-                orientation: "horizontal"
-                Button:
-                    text: "Encrypt the file!"
-                    on_release: root.encrypt_file()
-                Button:
-                    text: "Decrypt the file!"
-                    on_release: root.decrypt_file()
-            Button:
+            Button:  # Defines the button to select the file to be encrypted/decrypted.
                 text: "Select a file to encrypt"
                 on_release:
                     Factory.FilePicker().open()
+            BoxLayout:  # Defines the layout of the bottom section of the file encryption tab.
+                orientation: "horizontal"
+                Button:
+                    text: "Encrypt the file!"
+                    on_release:
+                        try: root.encrypt_file()
+                        except: root.pick_file_encrypt()
+                Button:
+                    text: "Decrypt the file!"
+                    on_release:
+                        try: root.decrypt_file()
+                        except: root.pick_file_decrypt()
+    TabbedPanelItem:  # Defines the code execution tab.
+        text: "Code\nExecution"
+        BoxLayout:  # Defines the layout of the code execution tab.
+            orientation: "vertical"
+            Button:  # Defines the button to select the file to be executed.
+                text: "Select a file to execute"
+                on_release:
+                    Factory.FilePicker().open()
+            BoxLayout:  # Defines the layout of the bottom section of the code execution tab.
+                orientation: "horizontal"
+                Button:
+                    text: "Execute the file!"
+                    on_release:
+                        try: root.execute_file()
+                        except: root.pick_file_execute()
 
 
-<FilePicker@ModalView>
+# Defines the file picker popup.
+<FilePicker>
     auto_dismiss: False
     name: "FilePicker"
-    BoxLayout:
+    BoxLayout:  # Defines the layout of the file picker popup.
         orientation: "vertical"
         FileChooserListView:
             id: input
             path: "./"
-        BoxLayout:
+        BoxLayout:  # Defines the layout of the bottom section of the file picker popup.
             orientation: "horizontal"
             size_hint_y: .1
             Button:
                 text: "Select"
                 on_release:
-                    Factory.MainUI().select_file(input.path, input.selection)
-                    root.dismiss()
+                    root.file_select(input.path, input.selection)
             Button:
                 text: "Cancel"
                 on_release: root.dismiss()
+
+# Defines the block size error popup.
+<BlockSizeError@ModalView>
+    auto_dismiss: False
+    name: "BlockSizeError"
+    size_hint: .35, .15
+    padding: 20, 10, 20, 20
+    BoxLayout:  # Defines the layout of the block size error popup.
+        orientation: "vertical"
+        Label:  # Defines the error message (split on two lines).
+            text: "The block size must be"
+        Label:  # Defines the error message (split on two lines).
+            text: "a positive integer, larger than 2!"
+        Button:
+            text: "Dismiss"
+            on_release: root.dismiss()
+
+# Defines the file output error popup.
+<FileOutputError@ModalView>
+    auto_dismiss: False
+    name: "FileOutputError"
+    size_hint: .35, .15
+    padding: 20, 10, 20, 20
+    BoxLayout:  # Defines the layout of the file output error popup.
+        orientation: "vertical"
+        Label:  # Defines the error message.
+            halign: "center"
+            text: "Unable to output to text,\ndue to technical restrictions."
+        Button:
+            text: "Dismiss"
+            on_release:
+                root.dismiss()
+
+# Defines the encryption key error popup.
+<KeyError@ModalView>
+    auto_dismiss: False
+    name: "KeyError"
+    size_hint: .35, .15
+    padding: 20, 10, 20, 20
+    BoxLayout:  # Defines the layout of the encryption key error popup.
+        orientation: "vertical"
+        Label:  # Defines the error message.
+            halign: "center"
+            text: "Sorry, that encryption key does not\nwork, please try a different value."
+        Button:
+            size_hint_y: .5
+            text: "Dismiss"
+            on_release: root.dismiss()
+
+# Defines the file picker error popup.
+<FileError@ModalView>
+    auto_dismiss: False
+    name: "FileError"
+    size_hint: .35, .15
+    padding: 20, 10, 20, 20
+    BoxLayout:  # Defines the layout of the file picker error popup.
+        orientation: "vertical"
+        Label:  # Defines the error message.
+            halign: "center"
+            text: "Sorry, that file does not exist."
+        Button:
+            size_hint_y: .5
+            text: "Dismiss"
+            on_release: root.dismiss()
+
+# Defines the saved settings popup.
+<SavedSettings@ModalView>
+    auto_dismiss: False
+    name: "SavedSettings"
+    size_hint: .35, .15
+    padding: 20, 10, 20, 20
+    BoxLayout:  # Defines the layout of the saved settings popup.
+        orientation: "vertical"
+        Label:  # Defines the informational notice.
+            text: "Settings saved!"
+        Button:
+            text: "Dismiss"
+            on_release: root.dismiss()
+
+# Defines the discarded settings popup.
+<DiscardedSettings@ModalView>
+    auto_dismiss: False
+    name: "DiscardedSettings"
+    size_hint: .35, .15
+    padding: 20, 10, 20, 20
+    BoxLayout:  # Defines the layout of the discarded settings popup.
+        orientation: "vertical"
+        Label:  # Defines the informational notice.
+            text: "Changes discarded!"
+        Button:
+            text: "Dismiss"
+            on_release: root.dismiss()
