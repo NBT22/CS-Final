@@ -42,13 +42,13 @@ def encrypt(text, n, a, b):
         utf8 = False
         pair = text[i:n + i]
         pair_value = ((a * Functions.let_to_dec(pair)) + b) % (1114111**n)
-        while utf8 is False:  # Check if the pair is a valid utf8 character, and that it is not a control character.
+        while utf8 is False:  # Check if the pair is a valid UTF-8 character, and that it is not a control character.
             while Functions.dec_to_let_check(pair_value, n) is False:
                 a = (a + 1) % 1114111
                 b = (b + 1) % 1114111
                 add += 1
                 pair_value = ((a * Functions.let_to_dec(pair)) + b) % (1114111**n)  # Recalculate the pair value, if
-                # the pair value does not create a valid utf8 character.
+                # the pair value does not create a valid UTF-8 character.
             rs += Functions.dec_to_let(pair_value, n)  # Add the pair to the encrypted string.
             utf8 = True
         i += n
@@ -94,7 +94,10 @@ class Functions:
     @staticmethod
     def unicode_check(num):
         try:
-            chr(num).encode("utf").decode()
+            if MainUI.utf16:
+                chr(num).encode("utf-16LE").decode()
+            else:
+                chr(num).encode("utf").decode()
         except UnicodeEncodeError:
             return True
         if num in exclude_chars:
@@ -122,7 +125,7 @@ class Functions:
             nm //= 1114111
         return rs
 
-    # This function will take a number, and check if the corresponding unicode letter is a valid utf8 character.
+    # This function will take a number, and check if the corresponding unicode letter is a valid UTF-8 character.
     @staticmethod
     def dec_to_let_check(num, block_size):
         nm = num
@@ -145,32 +148,56 @@ class MainUI(TabbedPanel):
     block_size_var = block_size_var
     encrypt_key_1 = encrypt_key_1
     encrypt_key_2 = encrypt_key_2
+    utf16 = False
     output_file_name = "output.txt"  # The default output file name.
     code_execution = False  # This is a boolean that will be used to determine if the decrypted file should be executed.
         
     # Takes the text from the input field and encrypts it.
     def encrypt_text(self):
-        with open(MainUI.output_file_name, "w", encoding="utf-8") as f:
-            f.write(encrypt(self.ids.input.text, block_size_var, encrypt_val_1, encrypt_val_2))
+        try:
+            with open(MainUI.output_file_name, "w", encoding="utf") as f:
+                f.write(encrypt(self.ids.input.text, block_size_var, encrypt_val_1, encrypt_val_2))
+        except UnicodeDecodeError:
+            MainUI.utf16 = True
+            with open(MainUI.output_file_name, "w", encoding="utf-16LE") as f:
+                f.write(encrypt(self.ids.input.text, block_size_var, encrypt_val_1, encrypt_val_2))
 
     # Selects the active file.
     @staticmethod
     def select_file(path, filename):
         global file  # Accessed by encrypt_file() and decrypt_file()
-        file = open(os.path.join(path, filename[0]), "r", encoding="utf-8")
+        file = open(os.path.join(path, filename[0]), "r", encoding="utf-16LE")
 
     # Encrypts the selected file.
     @staticmethod
     def encrypt_file():
-        with open(MainUI.output_file_name, "w", encoding="utf-8") as f:  # Output file. This will automatically close.
-            f.write(encrypt(file.read(), block_size_var, encrypt_val_1, encrypt_val_2))  # Write the encrypted string.
+        # try:
+        #     with open(MainUI.output_file_name, "w", encoding="utf") as f:  # Output file. This will automatically close.
+        #         file.seek(0)
+        #         f.write(encrypt(file.read(), block_size_var, encrypt_val_1, encrypt_val_2))  # Write the encrypted string.
+        # except UnicodeDecodeError:
+        #     MainUI.utf16 = True
+        file.seek(0)
+        with open(MainUI.output_file_name, "w", encoding="utf-32") as f:
+            while True:
+                char = file.read(1)
+                if not char:
+                    break
+                print('{:b}'.format(ord(chr)))
+                # f.write(encrypt('{0:08b}'.format(ord(chr)), block_size_var, encrypt_val_1, encrypt_val_2))
+                # f.write(encrypt(file.read(), block_size_var, encrypt_val_1, encrypt_val_2))
         file.close()  # Close the input file.
 
     # Decrypts the selected file.
     @staticmethod
     def decrypt_file():
-        with open(MainUI.output_file_name, "w", encoding="utf-8") as f:  # Output file. This will automatically close.
-            f.write(decrypt(file.read(), block_size_var, encrypt_val_1, encrypt_val_2))  # Write the decrypted string.
+        try:
+            with open(MainUI.output_file_name, "w", encoding="utf") as f:  # Output file. This will automatically close.
+                f.write(decrypt(file.read(), block_size_var, encrypt_val_1, encrypt_val_2))  # Write the decrypted string.
+        except UnicodeDecodeError:
+            MainUI.utf16 = True
+            with open(MainUI.output_file_name, "w", encoding="utf-16LE") as f:
+                f.write(decrypt(file.read(), block_size_var, encrypt_val_1, encrypt_val_2))
         file.close()  # Close the input file.
 
     # This function will decrypt the selected file and execute it.
